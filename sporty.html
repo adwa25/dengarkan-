@@ -1,0 +1,846 @@
+ <!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎵 MusicStream - Dengarkan Musik Terbaik</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <a href="#" class="logo">
+                    <i class="fas fa-music logo-icon"></i>
+                    <span class="logo-text">MusicStream</span>
+                </a>
+
+                <div class="search-container">
+                    <input type="text" class="search-box" id="searchBox" placeholder="Cari lagu, artis, atau genre...">
+                    <i class="fas fa-search search-icon"></i>
+                </div>
+
+                <div class="user-menu">
+                    <button class="user-btn" id="homeBtn">
+                        <i class="fas fa-home"></i>
+                        <span>Beranda</span>
+                    </button>
+                    <button class="user-btn" id="favoritesBtn">
+                        <i class="fas fa-heart"></i>
+                        <span>Favorit</span>
+                    </button>
+                    <button class="user-btn" id="historyBtn">
+                        <i class="fas fa-history"></i>
+                        <span>Riwayat</span>
+                    </button>
+                    <button class="user-btn login-btn" id="loginBtn">
+                        <i class="fas fa-user"></i>
+                        <span>Masuk</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="container">
+        <div class="main-layout">
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <div class="sidebar-section">
+                    <h3 class="sidebar-title">Jelajahi</h3>
+                    <a href="#" class="nav-item active" data-filter="all">
+                        <i class="fas fa-compact-disc"></i>
+                        <span>Semua Lagu</span>
+                    </a>
+                    <a href="#" class="nav-item" data-filter="pop">
+                        <i class="fas fa-guitar"></i>
+                        <span>Pop</span>
+                    </a>
+                    <a href="#" class="nav-item" data-filter="rock">
+                        <i class="fas fa-drum"></i>
+                        <span>Rock</span>
+                    </a>
+                    <a href="#" class="nav-item" data-filter="jazz">
+                        <i class="fas fa-music"></i>
+                        <span>Jazz</span>
+                    </a>
+                    <a href="#" class="nav-item" data-filter="hiphop">
+                        <i class="fas fa-microphone"></i>
+                        <span>Hip Hop</span>
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <h3 class="sidebar-title">Playlist Anda</h3>
+                    <a href="#" class="nav-item">
+                        <i class="fas fa-heart"></i>
+                        <span>Lagu Favorit</span>
+                        <span class="favorite-count" style="margin-left: auto; font-size: 12px;">0</span>
+                    </a>
+                    <a href="#" class="nav-item">
+                        <i class="fas fa-clock"></i>
+                        <span>Dengarkan Nanti</span>
+                    </a>
+                    <a href="#" class="nav-item">
+                        <i class="fas fa-star"></i>
+                        <span>Terbaik 2023</span>
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <h3 class="sidebar-title">Statistik</h3>
+                    <div style="color: var(--gray); font-size: 14px; padding: 10px;">
+                        <div style="margin-bottom: 10px;">
+                            <div style="display: flex; justify-content: space-between;">
+                                <span>Total Lagu</span>
+                                <span id="totalSongs">0</span>
+                            </div>
+                        </div>
+                        <div style="margin-bottom: 10px;">
+                            <div style="display: flex; justify-content: space-between;">
+                                <span>Favorit</span>
+                                <span id="totalFavorites">0</span>
+                            </div>
+                        </div>
+                        <div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span>Waktu Dengarkan</span>
+                                <span id="totalTime">0 jam</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="main-content">
+                <!-- Player -->
+                <div class="player-container">
+                    <div class="player-header">
+                        <h2 class="player-title">Sekarang Diputar</h2>
+                        <div class="volume-control">
+                            <i class="fas fa-volume-up" style="color: var(--gray);"></i>
+                            <input type="range" class="volume-slider" id="volumeSlider" min="0" max="1" step="0.1" value="0.7">
+                        </div>
+                    </div>
+
+                    <div class="player-info">
+                        <div class="album-art">
+                            <img id="currentAlbumArt" src="https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Album Art">
+                        </div>
+                        <div class="song-details">
+                            <h1 class="song-title" id="currentTitle">Pilih Lagu</h1>
+                            <p class="song-artist" id="currentArtist">-</p>
+                            <div class="song-stats">
+                                <div class="stat-item">
+                                    <i class="fas fa-play"></i>
+                                    <span id="playCount">0 diputar</span>
+                                </div>
+                                <div class="stat-item">
+                                    <i class="fas fa-heart"></i>
+                                    <span id="likeCount">0 suka</span>
+                                </div>
+                                <div class="stat-item">
+                                    <i class="fas fa-clock"></i>
+                                    <span id="currentDuration">-</span>
+                                </div>
+                            </div>
+                            <div class="song-actions">
+                                <button class="action-btn play-btn" id="mainPlayBtn">
+                                    <i class="fas fa-play"></i>
+                                    Putar
+                                </button>
+                                <button class="action-btn favorite-btn" id="mainFavoriteBtn">
+                                    <i class="fas fa-heart"></i>
+                                    Tambah Favorit
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="progress-container">
+                        <div class="progress-bar" id="progressBar">
+                            <div class="progress" id="progress"></div>
+                        </div>
+                        <div class="time-display">
+                            <span id="currentTime">0:00</span>
+                            <span id="duration">0:00</span>
+                        </div>
+                    </div>
+
+                    <audio id="audioPlayer" hidden></audio>
+
+                    <div class="player-controls">
+                        <button class="control-btn" id="shuffleBtn" title="Acak">
+                            <i class="fas fa-random"></i>
+                        </button>
+                        <button class="control-btn" id="prevBtn" title="Sebelumnya">
+                            <i class="fas fa-step-backward"></i>
+                        </button>
+                        <button class="control-btn play-pause-btn" id="playPauseBtn" title="Putar/Jeda">
+                            <i class="fas fa-play"></i>
+                        </button>
+                        <button class="control-btn" id="nextBtn" title="Selanjutnya">
+                            <i class="fas fa-step-forward"></i>
+                        </button>
+                        <button class="control-btn" id="repeatBtn" title="Ulangi">
+                            <i class="fas fa-redo"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- All Songs Section -->
+                <div class="playlist-section" id="allSongsSection">
+                    <div class="section-header">
+                        <h2 class="section-title">Semua Lagu</h2>
+                        <div class="filter-buttons">
+                            <button class="filter-btn active" data-sort="popular">Terpopuler</button>
+                            <button class="filter-btn" data-sort="new">Terbaru</button>
+                            <button class="filter-btn" data-sort="title">Judul A-Z</button>
+                        </div>
+                    </div>
+                    <div class="songs-grid" id="songsGrid">
+                        <!-- Songs will be loaded here -->
+                    </div>
+                    <div class="loading" id="songsLoading">
+                        <div class="spinner"></div>
+                    </div>
+                </div>
+
+                <!-- Favorites Section -->
+                <div class="favorites-section" id="favoritesSection">
+                    <div class="section-header">
+                        <h2 class="section-title">Lagu Favorit Anda</h2>
+                    </div>
+                    <div class="songs-grid" id="favoritesGrid">
+                        <!-- Favorite songs will be loaded here -->
+                    </div>
+                    <div class="empty-state" id="emptyFavorites">
+                        <i class="fas fa-heart empty-icon"></i>
+                        <p class="empty-text">Belum ada lagu favorit</p>
+                        <p class="empty-subtext">Klik ikon hati pada lagu untuk menambahkannya ke favorit</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div class="modal" id="loginModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Masuk ke MusicStream</h2>
+                <p class="modal-subtitle">Masuk untuk menyinkronkan favorit Anda di semua perangkat</p>
+            </div>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="email" class="form-label">Email</label>
+                    <input type="email" id="email" class="form-input" placeholder="email@contoh.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="password" class="form-label">Password</label>
+                    <input type="password" id="password" class="form-input" placeholder="Masukkan password" required>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" id="cancelLogin">
+                        Batal
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        Masuk
+                    </button>
+                </div>
+            </form>
+            <div class="modal-footer">
+                <p>Belum punya akun? <a href="#" style="color: var(--primary); text-decoration: none;">Daftar gratis</a></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>MusicStream</h3>
+                    <p style="color: var(--gray); font-size: 14px; line-height: 1.6;">
+                        Dengarkan jutaan lagu dan podcast tanpa batas. Temukan musik terbaik dari berbagai genre.
+                    </p>
+                </div>
+                <div class="footer-section">
+                    <h3>Perusahaan</h3>
+                    <ul class="footer-links">
+                        <li><a href="#">Tentang</a></li>
+                        <li><a href="#">Karir</a></li>
+                        <li><a href="#">Blog</a></li>
+                        <li><a href="#">Bantuan</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3>Komunitas</h3>
+                    <ul class="footer-links">
+                        <li><a href="#">Untuk Artis</a></li>
+                        <li><a href="#">Pengembang</a></li>
+                        <li><a href="#">Iklan</a></li>
+                        <li><a href="#">Investor</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3>Tautan Berguna</h3>
+                    <ul class="footer-links">
+                        <li><a href="#">Aplikasi Mobile</a></li>
+                        <li><a href="#">Dukungan</a></li>
+                        <li><a href="#">Pemutar Web</a></li>
+                        <li><a href="#">Aplikasi Desktop</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="copyright">
+                <p>&copy; 2023 MusicStream. Semua hak dilindungi undang-undang.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAHCwqjBClWH3-7GATszMTcBvhIzQH6pC8",
+            authDomain: "web-music-8ba88.firebaseapp.com",
+            databaseURL: "https://web-music-8ba88-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "web-music-8ba88",
+            storageBucket: "web-music-8ba88.appspot.com",
+            messagingSenderId: "1091687673475",
+            appId: "1:1091687673475:web:7d072709286325c06c740c"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        const auth = firebase.auth();
+
+        // App State
+        let songs = [];
+        let favorites = JSON.parse(localStorage.getItem('musicFavorites')) || [];
+        let currentSongIndex = 0;
+        let isPlaying = false;
+        let isShuffle = false;
+        let isRepeat = false;
+        let currentFilter = 'all';
+        let currentSort = 'popular';
+        let user = null;
+
+        // DOM Elements
+        const audioPlayer = document.getElementById('audioPlayer');
+        const playPauseBtn = document.getElementById('playPauseBtn');
+        const mainPlayBtn = document.getElementById('mainPlayBtn');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const shuffleBtn = document.getElementById('shuffleBtn');
+        const repeatBtn = document.getElementById('repeatBtn');
+        const progressBar = document.getElementById('progressBar');
+        const progress = document.getElementById('progress');
+        const currentTimeEl = document.getElementById('currentTime');
+        const durationEl = document.getElementById('duration');
+        const volumeSlider = document.getElementById('volumeSlider');
+        const searchBox = document.getElementById('searchBox');
+        const songsGrid = document.getElementById('songsGrid');
+        const favoritesGrid = document.getElementById('favoritesGrid');
+        const allSongsSection = document.getElementById('allSongsSection');
+        const favoritesSection = document.getElementById('favoritesSection');
+        const homeBtn = document.getElementById('homeBtn');
+        const favoritesBtn = document.getElementById('favoritesBtn');
+        const loginBtn = document.getElementById('loginBtn');
+        const loginModal = document.getElementById('loginModal');
+        const cancelLogin = document.getElementById('cancelLogin');
+        const loginForm = document.getElementById('loginForm');
+        const mainFavoriteBtn = document.getElementById('mainFavoriteBtn');
+        const songsLoading = document.getElementById('songsLoading');
+        const emptyFavorites = document.getElementById('emptyFavorites');
+
+        // Initialize App
+        function initApp() {
+            loadSongs();
+            updateFavoritesDisplay();
+            setupEventListeners();
+            updateStats();
+        }
+
+        // Load songs from Firebase
+        function loadSongs() {
+            songsLoading.style.display = 'flex';
+            
+            database.ref('songs').on('value', (snapshot) => {
+                songs = [];
+                snapshot.forEach((childSnapshot) => {
+                    const song = childSnapshot.val();
+                    song.id = childSnapshot.key;
+                    songs.push(song);
+                });
+                
+                renderSongs();
+                songsLoading.style.display = 'none';
+                
+                if (songs.length > 0 && !localStorage.getItem('lastPlayedSong')) {
+                    loadSong(0);
+                } else if (songs.length > 0) {
+                    const lastSongId = localStorage.getItem('lastPlayedSong');
+                    const lastIndex = songs.findIndex(song => song.id === lastSongId);
+                    if (lastIndex !== -1) {
+                        loadSong(lastIndex);
+                    } else {
+                        loadSong(0);
+                    }
+                }
+                
+                updateStats();
+            });
+        }
+
+        // Render songs to grid
+        function renderSongs(filter = '') {
+            songsGrid.innerHTML = '';
+            
+            let filteredSongs = [...songs];
+            
+            // Apply filter
+            if (currentFilter !== 'all') {
+                filteredSongs = filteredSongs.filter(song => 
+                    song.genre && song.genre.toLowerCase().includes(currentFilter)
+                );
+            }
+            
+            // Apply search
+            if (filter) {
+                const searchTerm = filter.toLowerCase();
+                filteredSongs = filteredSongs.filter(song =>
+                    (song.title && song.title.toLowerCase().includes(searchTerm)) ||
+                    (song.artist && song.artist.toLowerCase().includes(searchTerm)) ||
+                    (song.genre && song.genre.toLowerCase().includes(searchTerm))
+                );
+            }
+            
+            // Apply sort
+            switch (currentSort) {
+                case 'new':
+                    filteredSongs.sort((a, b) => b.timestamp - a.timestamp);
+                    break;
+                case 'title':
+                    filteredSongs.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
+                    break;
+                case 'popular':
+                default:
+                    // Default sort by popularity or maintain original order
+                    break;
+            }
+            
+            if (filteredSongs.length === 0) {
+                songsGrid.innerHTML = `
+                    <div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--gray);">
+                        <i class="fas fa-search" style="font-size: 48px; margin-bottom: 20px; opacity: 0.5;"></i>
+                        <p>Tidak ada lagu ditemukan</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            filteredSongs.forEach((song, index) => {
+                const songCard = document.createElement('div');
+                songCard.className = 'song-card';
+                if (songs[currentSongIndex] && song.id === songs[currentSongIndex].id) {
+                    songCard.classList.add('active');
+                }
+                
+                const isFavorite = favorites.includes(song.id);
+                
+                songCard.innerHTML = `
+                    <div class="card-image">
+                        <img src="${song.imageUrl || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'}" 
+                             alt="${song.title || 'Lagu'}">
+                        <div class="play-overlay">
+                            <i class="fas fa-play" style="color: white;"></i>
+                        </div>
+                        <button class="card-favorite ${isFavorite ? 'active' : ''}" data-id="${song.id}">
+                            <i class="fas fa-heart"></i>
+                        </button>
+                    </div>
+                    <div class="card-content">
+                        <h3 class="card-title">${song.title || 'Tanpa Judul'}</h3>
+                        <p class="card-artist">${song.artist || 'Artis Tidak Diketahui'}</p>
+                        <span class="card-genre">${song.genre || 'Musik'}</span>
+                    </div>
+                `;
+                
+                songCard.addEventListener('click', (e) => {
+                    if (!e.target.closest('.card-favorite')) {
+                        const songIndex = songs.findIndex(s => s.id === song.id);
+                        loadSong(songIndex);
+                        playSong();
+                    }
+                });
+                
+                songsGrid.appendChild(songCard);
+            });
+            
+            // Add event listeners to favorite buttons
+            document.querySelectorAll('.card-favorite').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const songId = btn.dataset.id;
+                    toggleFavorite(songId);
+                    btn.classList.toggle('active');
+                });
+            });
+        }
+
+        // Load song
+        function loadSong(index) {
+            if (songs.length === 0) return;
+            
+            currentSongIndex = index;
+            const song = songs[currentSongIndex];
+            
+            // Update player UI
+            document.getElementById('currentTitle').textContent = song.title || 'Tanpa Judul';
+            document.getElementById('currentArtist').textContent = song.artist || 'Artis Tidak Diketahui';
+            document.getElementById('currentAlbumArt').src = song.imageUrl || 
+                'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
+            document.getElementById('currentDuration').textContent = song.duration || '3:45';
+            
+            // Update favorite button
+            const isFavorite = favorites.includes(song.id);
+            mainFavoriteBtn.classList.toggle('active', isFavorite);
+            mainFavoriteBtn.innerHTML = isFavorite ? 
+                '<i class="fas fa-heart"></i> Favorit' : 
+                '<i class="far fa-heart"></i> Tambah Favorit';
+            
+            // Set audio source
+            audioPlayer.src = song.fileUrl || '';
+            
+            // Save last played song
+            localStorage.setItem('lastPlayedSong', song.id);
+            
+            // Update active song in grid
+            document.querySelectorAll('.song-card').forEach((card, i) => {
+                card.classList.remove('active');
+            });
+            
+            // Re-render to update active state
+            renderSongs(searchBox.value);
+        }
+
+        // Play song
+        function playSong() {
+            if (songs.length === 0) return;
+            
+            if (!audioPlayer.src) {
+                loadSong(0);
+            }
+            
+            if (isPlaying) {
+                audioPlayer.pause();
+                playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
+                mainPlayBtn.innerHTML = '<i class="fas fa-play"></i> Putar';
+            } else {
+                audioPlayer.play();
+                playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
+                mainPlayBtn.innerHTML = '<i class="fas fa-pause"></i> Jeda';
+            }
+            isPlaying = !isPlaying;
+        }
+
+        // Next song
+        function nextSong() {
+            if (songs.length === 0) return;
+            
+            if (isShuffle) {
+                currentSongIndex = Math.floor(Math.random() * songs.length);
+            } else {
+                currentSongIndex = (currentSongIndex + 1) % songs.length;
+            }
+            
+            loadSong(currentSongIndex);
+            playSong();
+        }
+
+        // Previous song
+        function prevSong() {
+            if (songs.length === 0) return;
+            
+            if (isShuffle) {
+                currentSongIndex = Math.floor(Math.random() * songs.length);
+            } else {
+                currentSongIndex = (currentSongIndex - 1 + songs.length) % songs.length;
+            }
+            
+            loadSong(currentSongIndex);
+            playSong();
+        }
+
+        // Toggle favorite
+        function toggleFavorite(songId) {
+            const index = favorites.indexOf(songId);
+            
+            if (index === -1) {
+                favorites.push(songId);
+            } else {
+                favorites.splice(index, 1);
+            }
+            
+            localStorage.setItem('musicFavorites', JSON.stringify(favorites));
+            
+            // Update UI
+            if (songs[currentSongIndex] && songs[currentSongIndex].id === songId) {
+                const isFavorite = favorites.includes(songId);
+                mainFavoriteBtn.classList.toggle('active', isFavorite);
+                mainFavoriteBtn.innerHTML = isFavorite ? 
+                    '<i class="fas fa-heart"></i> Favorit' : 
+                    '<i class="far fa-heart"></i> Tambah Favorit';
+            }
+            
+            updateFavoritesDisplay();
+            updateStats();
+        }
+
+        // Update favorites display
+        function updateFavoritesDisplay() {
+            favoritesGrid.innerHTML = '';
+            
+            const favoriteSongs = songs.filter(song => favorites.includes(song.id));
+            
+            if (favoriteSongs.length === 0) {
+                emptyFavorites.style.display = 'block';
+                document.querySelector('.favorite-count').textContent = '0';
+                return;
+            }
+            
+            emptyFavorites.style.display = 'none';
+            document.querySelector('.favorite-count').textContent = favoriteSongs.length;
+            
+            favoriteSongs.forEach(song => {
+                const songCard = document.createElement('div');
+                songCard.className = 'song-card';
+                
+                songCard.innerHTML = `
+                    <div class="card-image">
+                        <img src="${song.imageUrl || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'}" 
+                             alt="${song.title || 'Lagu'}">
+                        <div class="play-overlay">
+                            <i class="fas fa-play" style="color: white;"></i>
+                        </div>
+                        <button class="card-favorite active" data-id="${song.id}">
+                            <i class="fas fa-heart"></i>
+                        </button>
+                    </div>
+                    <div class="card-content">
+                        <h3 class="card-title">${song.title || 'Tanpa Judul'}</h3>
+                        <p class="card-artist">${song.artist || 'Artis Tidak Diketahui'}</p>
+                        <span class="card-genre">${song.genre || 'Musik'}</span>
+                    </div>
+                `;
+                
+                songCard.addEventListener('click', (e) => {
+                    if (!e.target.closest('.card-favorite')) {
+                        const songIndex = songs.findIndex(s => s.id === song.id);
+                        loadSong(songIndex);
+                        playSong();
+                    }
+                });
+                
+                favoritesGrid.appendChild(songCard);
+            });
+            
+            // Add event listeners to favorite buttons
+            document.querySelectorAll('#favoritesGrid .card-favorite').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const songId = btn.dataset.id;
+                    toggleFavorite(songId);
+                });
+            });
+        }
+
+        // Update statistics
+        function updateStats() {
+            document.getElementById('totalSongs').textContent = songs.length;
+            document.getElementById('totalFavorites').textContent = favorites.length;
+            
+            // Calculate total listening time (estimate)
+            const totalSeconds = songs.length * 240; // Average 4 minutes per song
+            const totalHours = Math.floor(totalSeconds / 3600);
+            document.getElementById('totalTime').textContent = `${totalHours} jam`;
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Play/Pause buttons
+            playPauseBtn.addEventListener('click', playSong);
+            mainPlayBtn.addEventListener('click', playSong);
+            
+            // Navigation buttons
+            prevBtn.addEventListener('click', prevSong);
+            nextBtn.addEventListener('click', nextSong);
+            
+            // Shuffle button
+            shuffleBtn.addEventListener('click', () => {
+                isShuffle = !isShuffle;
+                shuffleBtn.style.color = isShuffle ? 'var(--primary)' : 'var(--gray)';
+            });
+            
+            // Repeat button
+            repeatBtn.addEventListener('click', () => {
+                isRepeat = !isRepeat;
+                repeatBtn.style.color = isRepeat ? 'var(--primary)' : 'var(--gray)';
+                audioPlayer.loop = isRepeat;
+            });
+            
+            // Progress bar
+            progressBar.addEventListener('click', (e) => {
+                const rect = progressBar.getBoundingClientRect();
+                const percent = (e.clientX - rect.left) / rect.width;
+                audioPlayer.currentTime = percent * audioPlayer.duration;
+            });
+            
+            // Audio events
+            audioPlayer.addEventListener('timeupdate', () => {
+                const current = audioPlayer.currentTime;
+                const duration = audioPlayer.duration;
+                
+                if (duration) {
+                    const percent = (current / duration) * 100;
+                    progress.style.width = `${percent}%`;
+                    
+                    currentTimeEl.textContent = formatTime(current);
+                    durationEl.textContent = formatTime(duration);
+                }
+            });
+            
+            audioPlayer.addEventListener('ended', () => {
+                if (isRepeat) {
+                    audioPlayer.currentTime = 0;
+                    audioPlayer.play();
+                } else {
+                    nextSong();
+                }
+            });
+            
+            // Volume control
+            volumeSlider.addEventListener('input', () => {
+                audioPlayer.volume = volumeSlider.value;
+            });
+            
+            // Search
+            searchBox.addEventListener('input', () => {
+                renderSongs(searchBox.value);
+            });
+            
+            // Navigation
+            homeBtn.addEventListener('click', () => {
+                allSongsSection.style.display = 'block';
+                favoritesSection.style.display = 'none';
+                homeBtn.classList.add('active');
+                favoritesBtn.classList.remove('active');
+            });
+            
+            favoritesBtn.addEventListener('click', () => {
+                allSongsSection.style.display = 'none';
+                favoritesSection.style.display = 'block';
+                favoritesBtn.classList.add('active');
+                homeBtn.classList.remove('active');
+                updateFavoritesDisplay();
+            });
+            
+            // Favorite button
+            mainFavoriteBtn.addEventListener('click', () => {
+                if (songs[currentSongIndex]) {
+                    toggleFavorite(songs[currentSongIndex].id);
+                }
+            });
+            
+            // Login
+            loginBtn.addEventListener('click', () => {
+                loginModal.classList.add('active');
+            });
+            
+            cancelLogin.addEventListener('click', () => {
+                loginModal.classList.remove('active');
+            });
+            
+            loginForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+                
+                // For demo purposes, we'll just simulate login
+                user = { email, name: 'Pengguna' };
+                loginBtn.innerHTML = '<i class="fas fa-user"></i> ' + user.name;
+                loginModal.classList.remove('active');
+                
+                // In a real app, you would use Firebase Authentication:
+                // auth.signInWithEmailAndPassword(email, password)
+                //     .then((userCredential) => {
+                //         user = userCredential.user;
+                //         loginBtn.innerHTML = '<i class="fas fa-user"></i> ' + user.displayName;
+                //         loginModal.classList.remove('active');
+                //     })
+                //     .catch((error) => {
+                //         alert('Login gagal: ' + error.message);
+                //     });
+            });
+            
+            // Filter buttons
+            document.querySelectorAll('.nav-item[data-filter]').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    currentFilter = btn.dataset.filter;
+                    
+                    document.querySelectorAll('.nav-item').forEach(item => {
+                        item.classList.remove('active');
+                    });
+                    btn.classList.add('active');
+                    
+                    renderSongs(searchBox.value);
+                });
+            });
+            
+            // Sort buttons
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    currentSort = btn.dataset.sort;
+                    
+                    document.querySelectorAll('.filter-btn').forEach(item => {
+                        item.classList.remove('active');
+                    });
+                    btn.classList.add('active');
+                    
+                    renderSongs(searchBox.value);
+                });
+            });
+            
+            // Close modal when clicking outside
+            window.addEventListener('click', (e) => {
+                if (e.target === loginModal) {
+                    loginModal.classList.remove('active');
+                }
+            });
+        }
+
+        // Format time (seconds to MM:SS)
+        function formatTime(seconds) {
+            if (isNaN(seconds)) return '0:00';
+            
+            const min = Math.floor(seconds / 60);
+            const sec = Math.floor(seconds % 60);
+            return `${min}:${sec < 10 ? '0' : ''}${sec}`;
+        }
+
+        // Initialize the app when page loads
+        document.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+</html>

@@ -1,0 +1,786 @@
+  <!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - MusicStream Manager</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <link rel="stylesheet" href="admin-style.css">
+</head>
+<body>
+    <!-- Admin Header -->
+    <header class="admin-header">
+        <div class="container">
+            <div class="admin-header-content">
+                <a href="index.html" class="admin-logo">
+                    <i class="fas fa-headphones-alt admin-logo-icon"></i>
+                    <span class="admin-logo-text">MusicStream Admin</span>
+                </a>
+                
+                <div class="admin-nav">
+                    <a href="#" class="nav-btn active">
+                        <i class="fas fa-music"></i>
+                        Kelola Lagu
+                    </a>
+                    <a href="#" class="nav-btn">
+                        <i class="fas fa-chart-line"></i>
+                        Analytics
+                    </a>
+                    <a href="#" class="nav-btn">
+                        <i class="fas fa-users"></i>
+                        Pengguna
+                    </a>
+                    <a href="index.html" class="nav-btn">
+                        <i class="fas fa-globe"></i>
+                        Lihat Website
+                    </a>
+                    <button class="nav-btn logout-btn" id="logoutBtn">
+                        <i class="fas fa-sign-out-alt"></i>
+                        Keluar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Admin Stats -->
+        <div class="admin-stats">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-music"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value" id="totalSongs">0</div>
+                    <div class="stat-label">Total Lagu</div>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon" style="color: var(--secondary);">
+                    <i class="fas fa-play-circle"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value" id="totalPlays">0</div>
+                    <div class="stat-label">Total Diputar</div>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon" style="color: #FFA502;">
+                    <i class="fas fa-heart"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value" id="totalFavorites">0</div>
+                    <div class="stat-label">Total Favorit</div>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon" style="color: #1E90FF;">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value" id="totalUsers">0</div>
+                    <div class="stat-label">Total Pengguna</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Admin Main Content -->
+        <div class="admin-content">
+            <!-- Form Panel -->
+            <div class="form-panel">
+                <h2 class="form-title">
+                    <i class="fas fa-plus-circle"></i>
+                    Tambah Lagu Baru
+                </h2>
+                
+                <form id="songForm">
+                    <div class="form-group">
+                        <label class="form-label">
+                            Judul Lagu <span class="required">*</span>
+                        </label>
+                        <input type="text" class="form-input" id="songTitle" 
+                               placeholder="Contoh: Sporty" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">
+                            Nama Artis <span class="required">*</span>
+                        </label>
+                        <input type="text" class="form-input" id="songArtist" 
+                               placeholder="Contoh: Nina" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">
+                            Genre <span class="required">*</span>
+                        </label>
+                        <select class="form-input" id="songGenre" required>
+                            <option value="">Pilih Genre</option>
+                            <option value="Pop">Pop</option>
+                            <option value="Rock">Rock</option>
+                            <option value="Jazz">Jazz</option>
+                            <option value="Hip Hop">Hip Hop</option>
+                            <option value="R&B">R&B</option>
+                            <option value="Electronic">Electronic</option>
+                            <option value="Indie">Indie</option>
+                            <option value="Alternative">Alternative</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">
+                            Durasi (MM:SS) <span class="required">*</span>
+                        </label>
+                        <input type="text" class="form-input" id="songDuration" 
+                               placeholder="Contoh: 3:45" required pattern="[0-9]{1,3}:[0-5][0-9]">
+                        <span class="form-hint">Format: Menit:Detik (contoh: 4:20)</span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">
+                            URL File MP3 <span class="required">*</span>
+                        </label>
+                        <input type="url" class="form-input" id="songFileUrl" 
+                               placeholder="https://example.com/song.mp3" required>
+                        <span class="form-hint">Gunakan URL MP3 yang valid</span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">
+                            URL Gambar Album <span class="required">*</span>
+                        </label>
+                        <input type="url" class="form-input" id="songImageUrl" 
+                               placeholder="https://example.com/image.jpg" required>
+                        <span class="form-hint">Gunakan URL gambar yang valid (JPG/PNG)</span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">
+                            Lirik (Opsional)
+                        </label>
+                        <textarea class="form-input form-textarea" id="songLyrics" 
+                                  placeholder="Masukkan lirik lagu..."></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">
+                            Tahun Rilis
+                        </label>
+                        <input type="number" class="form-input" id="songYear" 
+                               placeholder="2023" min="1900" max="2024">
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary" id="submitBtn">
+                            <i class="fas fa-save"></i>
+                            Simpan Lagu
+                        </button>
+                        <button type="reset" class="btn btn-secondary" id="resetBtn">
+                            <i class="fas fa-undo"></i>
+                            Reset
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Table Panel -->
+            <div class="table-panel">
+                <div class="table-header">
+                    <h2 class="table-title">
+                        <i class="fas fa-list"></i>
+                        Daftar Lagu
+                    </h2>
+                    
+                    <div class="table-controls">
+                        <input type="text" class="search-box" id="searchTable" 
+                               placeholder="Cari lagu atau artis...">
+                        <button class="btn btn-primary" id="refreshBtn">
+                            <i class="fas fa-sync-alt"></i>
+                            Refresh
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="table-container">
+                    <table class="songs-table" id="songsTable">
+                        <thead>
+                            <tr>
+                                <th style="width: 40px;">#</th>
+                                <th>Lagu</th>
+                                <th>Genre</th>
+                                <th>Durasi</th>
+                                <th>Status</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="songsTableBody">
+                            <!-- Songs will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="loading" id="tableLoading">
+                    <div class="spinner"></div>
+                </div>
+                
+                <div class="empty-state" id="emptyTable" style="display: none;">
+                    <i class="fas fa-music empty-icon"></i>
+                    <p class="empty-text">Belum ada lagu</p>
+                    <p class="empty-subtext">Tambahkan lagu pertama Anda menggunakan form di samping</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Player Preview -->
+        <div class="player-preview" id="playerPreview" style="display: none;">
+            <h3 class="preview-title">
+                <i class="fas fa-play-circle"></i>
+                Preview Lagu
+            </h3>
+            
+            <div class="preview-content">
+                <div class="preview-album">
+                    <img id="previewImage" src="" alt="Preview Album">
+                </div>
+                
+                <div class="preview-info">
+                    <h4 class="preview-song-title" id="previewTitle">Judul Lagu</h4>
+                    <p class="preview-song-artist" id="previewArtist">Artis</p>
+                    <span class="preview-song-genre" id="previewGenre">Genre</span>
+                    
+                    <div class="form-actions" style="margin-top: 20px;">
+                        <button class="btn btn-primary" id="playPreviewBtn">
+                            <i class="fas fa-play"></i>
+                            Putar Preview
+                        </button>
+                        <button class="btn btn-secondary" id="stopPreviewBtn">
+                            <i class="fas fa-stop"></i>
+                            Berhenti
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <audio id="previewAudio" hidden></audio>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal" id="deleteModal">
+        <div class="modal-content">
+            <button class="modal-close" id="closeDeleteModal">&times;</button>
+            
+            <h3 class="modal-title">
+                <i class="fas fa-exclamation-triangle"></i>
+                Hapus Lagu
+            </h3>
+            
+            <p class="modal-message" id="deleteMessage">
+                Apakah Anda yakin ingin menghapus lagu ini? Tindakan ini tidak dapat dibatalkan.
+            </p>
+            
+            <div class="modal-actions">
+                <button class="btn btn-secondary" id="cancelDelete">
+                    Batal
+                </button>
+                <button class="btn btn-danger" id="confirmDelete">
+                    <i class="fas fa-trash"></i>
+                    Hapus
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div class="modal" id="successModal">
+        <div class="modal-content">
+            <button class="modal-close" id="closeSuccessModal">&times;</button>
+            
+            <h3 class="modal-title" style="color: var(--primary);">
+                <i class="fas fa-check-circle"></i>
+                Berhasil!
+            </h3>
+            
+            <p class="modal-message" id="successMessage">
+                Lagu berhasil disimpan.
+            </p>
+            
+            <div class="modal-actions">
+                <button class="btn btn-primary" id="closeSuccessBtn">
+                    Tutup
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="admin-footer">
+        <div class="container">
+            <p>MusicStream Admin Panel &copy; 2023 | Version 1.0.0</p>
+            <p style="font-size: 12px; margin-top: 10px; color: var(--gray-dark);">
+                Terhubung ke Firebase: <span id="firebaseStatus" style="color: var(--primary);">● Terhubung</span>
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAHCwqjBClWH3-7GATszMTcBvhIzQH6pC8",
+            authDomain: "web-music-8ba88.firebaseapp.com",
+            databaseURL: "https://web-music-8ba88-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "web-music-8ba88",
+            storageBucket: "web-music-8ba88.appspot.com",
+            messagingSenderId: "1091687673475",
+            appId: "1:1091687673475:web:7d072709286325c06c740c"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        // App State
+        let songs = [];
+        let currentEditingId = null;
+        let songToDelete = null;
+
+        // DOM Elements
+        const songForm = document.getElementById('songForm');
+        const songsTableBody = document.getElementById('songsTableBody');
+        const tableLoading = document.getElementById('tableLoading');
+        const emptyTable = document.getElementById('emptyTable');
+        const searchTable = document.getElementById('searchTable');
+        const refreshBtn = document.getElementById('refreshBtn');
+        const submitBtn = document.getElementById('submitBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const deleteModal = document.getElementById('deleteModal');
+        const successModal = document.getElementById('successModal');
+        const closeDeleteModal = document.getElementById('closeDeleteModal');
+        const cancelDelete = document.getElementById('cancelDelete');
+        const confirmDelete = document.getElementById('confirmDelete');
+        const closeSuccessModal = document.getElementById('closeSuccessModal');
+        const closeSuccessBtn = document.getElementById('closeSuccessBtn');
+        const playerPreview = document.getElementById('playerPreview');
+        const previewAudio = document.getElementById('previewAudio');
+        const playPreviewBtn = document.getElementById('playPreviewBtn');
+        const stopPreviewBtn = document.getElementById('stopPreviewBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+
+        // Initialize App
+        function initApp() {
+            loadSongs();
+            setupEventListeners();
+            updateStats();
+        }
+
+        // Load songs from Firebase
+        function loadSongs() {
+            tableLoading.style.display = 'flex';
+            emptyTable.style.display = 'none';
+            
+            database.ref('songs').on('value', (snapshot) => {
+                songs = [];
+                snapshot.forEach((childSnapshot) => {
+                    const song = childSnapshot.val();
+                    song.id = childSnapshot.key;
+                    songs.push(song);
+                });
+                
+                renderSongsTable();
+                tableLoading.style.display = 'none';
+                
+                if (songs.length === 0) {
+                    emptyTable.style.display = 'block';
+                }
+                
+                updateStats();
+            }, (error) => {
+                console.error('Error loading songs:', error);
+                tableLoading.style.display = 'none';
+                emptyTable.style.display = 'block';
+            });
+        }
+
+        // Render songs table
+        function renderSongsTable(filter = '') {
+            songsTableBody.innerHTML = '';
+            
+            let filteredSongs = [...songs];
+            
+            // Apply search filter
+            if (filter) {
+                const searchTerm = filter.toLowerCase();
+                filteredSongs = filteredSongs.filter(song =>
+                    (song.title && song.title.toLowerCase().includes(searchTerm)) ||
+                    (song.artist && song.artist.toLowerCase().includes(searchTerm)) ||
+                    (song.genre && song.genre.toLowerCase().includes(searchTerm))
+                );
+            }
+            
+            if (filteredSongs.length === 0) {
+                songsTableBody.innerHTML = `
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 40px; color: var(--gray);">
+                            Tidak ada lagu ditemukan
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            filteredSongs.forEach((song, index) => {
+                const row = document.createElement('tr');
+                
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>
+                        <div class="song-info-cell">
+                            <div class="song-thumb">
+                                <img src="${song.imageUrl || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'}" 
+                                     alt="${song.title || 'Lagu'}">
+                            </div>
+                            <div class="song-details">
+                                <div class="song-title">${song.title || 'Tanpa Judul'}</div>
+                                <div class="song-artist">${song.artist || 'Artis Tidak Diketahui'}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="song-genre">${song.genre || 'Musik'}</span>
+                    </td>
+                    <td>${song.duration || '3:45'}</td>
+                    <td>
+                        <span style="color: var(--primary); font-weight: 500;">
+                            <i class="fas fa-check-circle"></i> Aktif
+                        </span>
+                    </td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="action-btn edit-btn" data-id="${song.id}" title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="action-btn play-btn" data-id="${song.id}" title="Preview">
+                                <i class="fas fa-play"></i>
+                            </button>
+                            <button class="action-btn delete-btn" data-id="${song.id}" title="Hapus">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                
+                songsTableBody.appendChild(row);
+            });
+            
+            // Add event listeners to action buttons
+            document.querySelectorAll('.edit-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const songId = btn.dataset.id;
+                    editSong(songId);
+                });
+            });
+            
+            document.querySelectorAll('.play-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const songId = btn.dataset.id;
+                    previewSong(songId);
+                });
+            });
+            
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const songId = btn.dataset.id;
+                    showDeleteModal(songId);
+                });
+            });
+        }
+
+        // Add or Update song
+        function saveSong(e) {
+            e.preventDefault();
+            
+            const songTitle = document.getElementById('songTitle').value.trim();
+            const songArtist = document.getElementById('songArtist').value.trim();
+            const songGenre = document.getElementById('songGenre').value;
+            const songDuration = document.getElementById('songDuration').value.trim();
+            const songFileUrl = document.getElementById('songFileUrl').value.trim();
+            const songImageUrl = document.getElementById('songImageUrl').value.trim();
+            const songLyrics = document.getElementById('songLyrics').value.trim();
+            const songYear = document.getElementById('songYear').value;
+            
+            // Validation
+            if (!songTitle || !songArtist || !songGenre || !songDuration || !songFileUrl || !songImageUrl) {
+                showMessage('Harap isi semua field yang wajib diisi!', 'error');
+                return;
+            }
+            
+            // Duration validation
+            if (!/^[0-9]{1,3}:[0-5][0-9]$/.test(songDuration)) {
+                showMessage('Format durasi tidak valid! Gunakan format MM:SS', 'error');
+                return;
+            }
+            
+            const songData = {
+                title: songTitle,
+                artist: songArtist,
+                genre: songGenre,
+                duration: songDuration,
+                fileUrl: songFileUrl,
+                imageUrl: songImageUrl,
+                lyrics: songLyrics || null,
+                year: songYear || null,
+                timestamp: Date.now(),
+                plays: 0,
+                favorites: 0
+            };
+            
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
+            
+            if (currentEditingId) {
+                // Update existing song
+                database.ref(`songs/${currentEditingId}`).update(songData)
+                    .then(() => {
+                        showSuccess('Lagu berhasil diperbarui!');
+                        resetForm();
+                    })
+                    .catch((error) => {
+                        showMessage('Gagal memperbarui lagu: ' + error.message, 'error');
+                    })
+                    .finally(() => {
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = '<i class="fas fa-save"></i> Simpan Lagu';
+                    });
+            } else {
+                // Add new song
+                const newSongRef = database.ref('songs').push();
+                newSongRef.set(songData)
+                    .then(() => {
+                        showSuccess('Lagu berhasil ditambahkan!');
+                        resetForm();
+                    })
+                    .catch((error) => {
+                        showMessage('Gagal menambahkan lagu: ' + error.message, 'error');
+                    })
+                    .finally(() => {
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = '<i class="fas fa-save"></i> Simpan Lagu';
+                    });
+            }
+        }
+
+        // Edit song
+        function editSong(songId) {
+            const song = songs.find(s => s.id === songId);
+            if (!song) return;
+            
+            currentEditingId = songId;
+            
+            // Fill form with song data
+            document.getElementById('songTitle').value = song.title || '';
+            document.getElementById('songArtist').value = song.artist || '';
+            document.getElementById('songGenre').value = song.genre || '';
+            document.getElementById('songDuration').value = song.duration || '';
+            document.getElementById('songFileUrl').value = song.fileUrl || '';
+            document.getElementById('songImageUrl').value = song.imageUrl || '';
+            document.getElementById('songLyrics').value = song.lyrics || '';
+            document.getElementById('songYear').value = song.year || '';
+            
+            // Update form title and button
+            document.querySelector('.form-title').innerHTML = `
+                <i class="fas fa-edit"></i>
+                Edit Lagu
+            `;
+            submitBtn.innerHTML = '<i class="fas fa-save"></i> Update Lagu';
+            
+            // Scroll to form
+            document.querySelector('.form-panel').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Preview song
+        function previewSong(songId) {
+            const song = songs.find(s => s.id === songId);
+            if (!song) return;
+            
+            // Update preview
+            document.getElementById('previewTitle').textContent = song.title || 'Judul Lagu';
+            document.getElementById('previewArtist').textContent = song.artist || 'Artis';
+            document.getElementById('previewGenre').textContent = song.genre || 'Genre';
+            document.getElementById('previewImage').src = song.imageUrl || 
+                'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
+            
+            previewAudio.src = song.fileUrl || '';
+            
+            // Show preview section
+            playerPreview.style.display = 'block';
+            playerPreview.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Show delete confirmation modal
+        function showDeleteModal(songId) {
+            const song = songs.find(s => s.id === songId);
+            if (!song) return;
+            
+            songToDelete = songId;
+            
+            document.getElementById('deleteMessage').innerHTML = `
+                Apakah Anda yakin ingin menghapus lagu <strong>"${song.title}"</strong> oleh <strong>${song.artist}</strong>? 
+                Tindakan ini tidak dapat dibatalkan.
+            `;
+            
+            deleteModal.classList.add('active');
+        }
+
+        // Delete song
+        function deleteSong() {
+            if (!songToDelete) return;
+            
+            database.ref(`songs/${songToDelete}`).remove()
+                .then(() => {
+                    showSuccess('Lagu berhasil dihapus!');
+                    deleteModal.classList.remove('active');
+                    songToDelete = null;
+                })
+                .catch((error) => {
+                    showMessage('Gagal menghapus lagu: ' + error.message, 'error');
+                });
+        }
+
+        // Reset form
+        function resetForm() {
+            songForm.reset();
+            currentEditingId = null;
+            
+            // Reset form title and button
+            document.querySelector('.form-title').innerHTML = `
+                <i class="fas fa-plus-circle"></i>
+                Tambah Lagu Baru
+            `;
+            submitBtn.innerHTML = '<i class="fas fa-save"></i> Simpan Lagu';
+        }
+
+        // Update statistics
+        function updateStats() {
+            document.getElementById('totalSongs').textContent = songs.length;
+            
+            // Calculate total plays and favorites
+            let totalPlays = 0;
+            let totalFavorites = 0;
+            
+            songs.forEach(song => {
+                totalPlays += song.plays || 0;
+                totalFavorites += song.favorites || 0;
+            });
+            
+            document.getElementById('totalPlays').textContent = totalPlays.toLocaleString();
+            document.getElementById('totalFavorites').textContent = totalFavorites.toLocaleString();
+            
+            // For demo, set users to a fixed number
+            document.getElementById('totalUsers').textContent = Math.floor(songs.length * 10);
+        }
+
+        // Show success message
+        function showSuccess(message) {
+            document.getElementById('successMessage').textContent = message;
+            successModal.classList.add('active');
+        }
+
+        // Show error message
+        function showMessage(message, type = 'error') {
+            alert(message); // For simplicity, using alert. Could be replaced with a toast notification
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Form submission
+            songForm.addEventListener('submit', saveSong);
+            
+            // Form reset
+            resetBtn.addEventListener('click', resetForm);
+            
+            // Table search
+            searchTable.addEventListener('input', (e) => {
+                renderSongsTable(e.target.value);
+            });
+            
+            // Refresh button
+            refreshBtn.addEventListener('click', () => {
+                loadSongs();
+                showMessage('Data lagu telah direfresh', 'info');
+            });
+            
+            // Delete modal
+            closeDeleteModal.addEventListener('click', () => {
+                deleteModal.classList.remove('active');
+                songToDelete = null;
+            });
+            
+            cancelDelete.addEventListener('click', () => {
+                deleteModal.classList.remove('active');
+                songToDelete = null;
+            });
+            
+            confirmDelete.addEventListener('click', deleteSong);
+            
+            // Success modal
+            closeSuccessModal.addEventListener('click', () => {
+                successModal.classList.remove('active');
+            });
+            
+            closeSuccessBtn.addEventListener('click', () => {
+                successModal.classList.remove('active');
+            });
+            
+            // Preview player
+            playPreviewBtn.addEventListener('click', () => {
+                if (previewAudio.src) {
+                    previewAudio.play();
+                    playPreviewBtn.innerHTML = '<i class="fas fa-pause"></i> Jeda';
+                    
+                    previewAudio.addEventListener('ended', () => {
+                        playPreviewBtn.innerHTML = '<i class="fas fa-play"></i> Putar Preview';
+                    });
+                }
+            });
+            
+            stopPreviewBtn.addEventListener('click', () => {
+                previewAudio.pause();
+                previewAudio.currentTime = 0;
+                playPreviewBtn.innerHTML = '<i class="fas fa-play"></i> Putar Preview';
+            });
+            
+            previewAudio.addEventListener('pause', () => {
+                playPreviewBtn.innerHTML = '<i class="fas fa-play"></i> Putar Preview';
+            });
+            
+            // Logout
+            logoutBtn.addEventListener('click', () => {
+                if (confirm('Apakah Anda yakin ingin keluar?')) {
+                    window.location.href = 'index.html';
+                }
+            });
+            
+            // Close modals on outside click
+            window.addEventListener('click', (e) => {
+                if (e.target === deleteModal) {
+                    deleteModal.classList.remove('active');
+                    songToDelete = null;
+                }
+                if (e.target === successModal) {
+                    successModal.classList.remove('active');
+                }
+            });
+        }
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+</html>
